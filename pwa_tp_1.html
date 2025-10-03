@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Practica PWA</title>
+		<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+		<!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous"> -->
+		<link rel="stylesheet" href="w3.css">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+		<style type="text/css">
+			body { margin: 100px; }
+			li { margin-bottom: 10px; }
+			.w3-button { margin-right: 10px }
+			.text-line-through { text-decoration: line-through; color: grey; }
+			.cursor-mano:hover { cursor: pointer; }
+			.fa-icon-grow { transition: transform 0.3s ease; color: grey; }
+			.fa-icon-grow:hover { transform: scale(1.5); color: red; }
+		</style>
+	</head>
+	<body>
+		
+		<div id="app">			
+			<h1 class="w3-panel w3-light-blue">{{ titulo }}</h1>
+			<br>
+			<h3 class="w3-panel w3-leftbar w3-pale-green">Ejercicio 1</h3>
+			<ul class="w3-ul" style="width:30%">
+  				<li>Nombre: {{ nombre }}</li>
+  				<li>Edad:   {{ edad }}</li>
+  				<li>Ciudad: {{ ciudad }}</li>
+			</ul>
+        	<h5 class="w3-panel w3-pale-blue">Hola, mi nombre es {{ nombre }}, tengo {{ edad }} años y vivo en {{ ciudad }}.</h5>
+        	<br>
+        	<h3 class="w3-panel w3-leftbar w3-pale-green">Ejercicio 2</h3>
+        	<h5 class="w3-padding-large">Contador: <span class="w3-padding w3-tag" :class="{'w3-pale-blue': !contadorNegativo, 'w3-pale-red': contadorNegativo}">{{ contador }}</span></h5>
+        	<form class="w3-container">
+        		<input type="button" class="w3-button w3-circle w3-light-blue w3-ripple w3-padding-large w3-large" value="+" @:click="contadorSuma">
+	        	<input type="button" class="w3-button w3-circle w3-light-blue w3-ripple w3-padding-large w3-large" value="-" @:click="contadorResta">
+	        	<input type="button" class="w3-button w3-circle w3-light-blue w3-ripple w3-padding-large w3-large" value="0" @:click="contadorReset">
+	  			<br>
+  			</form>
+  			<br>
+			<h3 class="w3-panel w3-leftbar w3-pale-green">Ejercicio 3</h3>
+			<br>
+			<form class="w3-flex" style="gap:32px">
+				<input type="text" v-model="item" placeholder="Ingrese el nombre de la tarea" size="50" @keyup.enter="agregarItem" required autofocus>
+	        	<input type="submit" class="w3-button w3-small w3-round-large w3-light-blue" value="Agregar" v-on:click.prevent="agregarItem">
+	        	<input type="reset" class="w3-button w3-small w3-round-large w3-light-blue" value="Limpiar">
+	        	<span>Total tareas: {{ totalItems }}</span>
+	        	<span>Cumplidas: {{ tareasOk }}</span>
+  			</form>
+        	<br>
+        	<ul class="w3-ul">
+            	<li v-for="item in items" :key="item.item">
+            		<div class="w3-flex">
+                		<span style="flex-grow: 8" :class='{"text-line-through": item.escheck}'>{{ item.item }}</span>
+                		<span class="cursor-mano" @:click="checkItem(item)">&emsp;<i class="fa-solid fa-check fa-icon-grow"></i>&emsp;</span>
+                		<span class="cursor-mano" @:click="editarItem(item)">&emsp;<i class="fa-solid fa-pen fa-icon-grow"></i>&emsp;</span>
+                		<span class="cursor-mano" @:click="eliminarItem(item)">&emsp;<i class="fa-solid fa-xmark fa-icon-grow"></i>&emsp;</span>
+                	</div>                	
+            	</li>
+        	</ul>
+		</div>
+
+		<script>
+  		const { createApp, ref, reactive, computed, onMounted, nextTick, useTemplateRef } = Vue
+
+  		createApp({
+    		setup() {
+      			const titulo 	= ref('PWA - Trabajo Practico 1');
+                const nombre 	= ref('Ana Garcia');
+                const edad 		= ref('30');
+                const ciudad  	= ref('Tupungato');
+                const contador	= ref(0);
+                const tareasOk	= ref(0);
+                const item		= ref('');
+                const escheck	= ref(false);
+                const items		= reactive([]);
+
+                const contadorSuma = () => {
+                	contador.value ++;
+                }
+
+                const contadorResta = () => {
+                	contador.value --;
+                }
+
+                const contadorReset = () => {
+                	contador.value = 0;
+                }
+
+                //const contadorPositivo = computed( () => contador.value >= 0);
+                const contadorNegativo 	= computed( () => contador.value < 0);
+                const totalItems 		= computed( () => items.length);
+
+                const agregarItem = () => {
+                	if (item.value) {
+                		items.unshift({item: item.value, escheck: escheck.value});
+                		item.value 		= '';
+                		escheck.value	= false;
+                	}
+                }
+
+				const eliminarItem = (item_) => {
+					if (confirm("Confirme por favor\n\nEliminar: "+item_.item) == true) {
+  						let itemx = item_.item;
+						let index = items.findIndex(item_ => item_.item === itemx);
+						if (index !== -1) {
+							tareasOk.value += (item_.escheck ? -1 : 0);
+  							items.splice(index, 1);
+						}
+					}
+                }
+
+                const checkItem = (item_) => {
+                	tareasOk.value += (item_.escheck ? -1 : 1);
+                	item_.escheck 	= !item_.escheck;
+                	//const cnt: number = items.reduce((acu: number) => {return acu + 1;}, 0);
+                }
+
+                const editarItem = (item_) => {
+      				const editar = prompt('Editar tarea:', item_.item);
+      				if (editar !== null && editar.trim() !== '') {      				    
+      				    let itemx = item_.item;
+						let index = items.findIndex(item_ => item_.item === itemx);
+						if (index !== -1) {
+  							items[index].item = editar;
+						}
+      				}
+    			}
+
+                // Diferencia: Se debe retornar todo lo que se quiera usar en el HTML
+                return {
+                    titulo,                    
+                    nombre,
+                    edad,
+                    ciudad,
+                    contador,
+                    contadorSuma,
+                    contadorResta,
+                    contadorReset,
+                    //contadorPositivo,
+                    contadorNegativo,
+                    item,
+                    escheck,
+                    items,
+                    agregarItem,
+                    eliminarItem,
+                    editarItem,
+                    checkItem,
+                    totalItems,
+                    tareasOk
+                };
+    		}
+  		}).mount('#app')
+		</script>
+	</body>
+</html>
